@@ -28,6 +28,8 @@ class UserManager(BaseUserManager):
     """
 
     def create_user(self, username, email, password=None):
+        if not email:
+            raise ValueError('Enter an email address')
         if not username:
             raise ValueError("Username should be provided!")
         elif BlacklistedUsernames.objects.filter(username=username).exists():
@@ -36,6 +38,7 @@ class UserManager(BaseUserManager):
             raise ValueError("You can't have the same username as organisation name!")
         elif not re.match(r'^[a-z0-9]*$', username):
             raise ValueError("Username may only contain letters and numbers")
+        email = self.normalize_email(email)
         user = self.model(username=username, email=email)
         if password:
             user.set_password(password)
@@ -77,6 +80,7 @@ class User(AbstractBaseUser):
         return self.is_active and self.is_staff and self.is_superuser
 
     USERNAME_FIELD = 'username'
+    REQUIRED_FIELDS = ['email']
 
     objects = UserManager()
 
